@@ -37,6 +37,7 @@ app.get('/', function (req, res) {
 
 // token redirection
 app.get('/auth/callback', function (req, res) {
+
   githubAuth.code.getToken(req.originalUrl)
     .then(function (token) {
 
