@@ -7,9 +7,6 @@ events {
 
 http {
 
-    # Logging
-#   open_log_file_cache max=1000 inactive=60s;
-
     # SSL
     ssl_prefer_server_ciphers   on;
 
@@ -32,9 +29,9 @@ http {
 
     ssl_session_cache   shared:WEB:10m;
 
-    ssl_certificate /home/nginx_tests/cert/NodeRED_chain.pem;
+    ssl_certificate $eProsima{certificates_root}/NodeRED_chain.pem;
 
-    ssl_certificate_key /home/nginx_tests/cert/NodeRED_privkey.pem;
+    ssl_certificate_key $eProsima{certificates_root}/NodeRED_privkey.pem;
 
     # We notify all upstream servers that we are using https on the client-proxy side
     proxy_set_header X-FORWARDED-PROTO https;
@@ -83,14 +80,14 @@ http {
         location /oauth/token {
 
             # redirect to the authorization server
-            proxy_pass https://DESKTOP-4ICA8LT:3000;
+            proxy_pass $eProsima{authorization_server_url};
         }
 
         # Oauth2.0 resource server API goes through the proxy
         location /api/userinfo {
 
             # redirect to the authorization server
-            proxy_pass https://DESKTOP-4ICA8LT:3000;
+            proxy_pass $eProsima{authorization_server_url};
         }
 
     }
@@ -102,9 +99,7 @@ http {
         # the orchestrator that checks and routes
         location / {
 
-            proxy_pass http://localhost:11811;
-
-#           error_log /home/nginx_tests/logs/redirect.log;
+            proxy_pass $eProsima{orchestrator_url};
         }
 
         # generic regex to redirect the servers to ports
@@ -115,8 +110,6 @@ http {
             rewrite /node_red_server/(\d+)(.*) /$2 break;
             # redirect to the specific port
             proxy_pass http://127.0.0.1:$1;
-
-#           error_log /home/nginx_tests/logs/redirect.log debug;
         }
 
         # any traffic to node_red_server not captured in the most
@@ -125,6 +118,5 @@ http {
 
             return 401 "A port identifier is required";
         }
-
     }
 }
