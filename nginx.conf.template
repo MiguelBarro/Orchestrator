@@ -1,13 +1,16 @@
 # Reverse-Proxy for Orchestrator redirection
 # Also provides https <-> http translation
 
+load_module modules/ngx_http_accounting_module.so;
+
 events {
     worker_connections 1024;
 }
 
 http {
 
-    # SSL
+# SSL config-----------------------------------------------------------------------------------------------------------
+
     ssl_prefer_server_ciphers   on;
 
     proxy_headers_hash_max_size 512;
@@ -36,7 +39,7 @@ http {
     # We notify all upstream servers that we are using https on the client-proxy side
     proxy_set_header X-FORWARDED-PROTO https;
 
-# ---------------------------------------------------------------------------------------------------------------------
+# Websocket forwarding-------------------------------------------------------------------------------------------------
 
     #Defines the HTTP protocol version for proxying
     #by default it it set to 1.0.
@@ -72,6 +75,13 @@ http {
     #Defines the original port requested by the client.    
     proxy_set_header X-Forwarded-Port $server_port;
 
+# accounting-----------------------------------------------------------------------------------------------------------
+
+    # turn on accounting function
+    accounting on;
+    accounting_log $eProsima{traffic_log_root}/traffic.log;
+    accounting_interval 300;
+
     server {
 
         listen 6339;
@@ -104,6 +114,8 @@ http {
 
         # generic regex to redirect the servers to ports
         location ~ /node_red_server/(\d+) {
+
+            accounting_id $request_uri; # per port accounting
 
             # remove the /node_red_server/port/ from url
             rewrite /node_red_server/(\d+)(/.*) $2 break;

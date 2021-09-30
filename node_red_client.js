@@ -25,7 +25,7 @@ app.use(cookieSession(global_settings.cookies));
 app.use((req, res, next) => {
     // The orchestrator authentication process generates the browser side encrypted cookies
     // that keep the user identity
-    if (req.session.userId)
+    if (req.session.userId == process.argv[3])
     {
         // already authenticated go on
         next();
