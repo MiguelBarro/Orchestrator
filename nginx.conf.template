@@ -131,9 +131,11 @@ http {
 
             accounting_id $request_uri; # per port accounting
 
+            # redirect to put a backshlash
+            rewrite /node_red_server/(\d+)$ /node_red_server/$1/ redirect;
             # remove the /node_red_server/port/ from url
             rewrite /node_red_server/(\d+)(/.*) $2 break;
-            rewrite /node_red_server/(\d+)(.*) /$2 break;
+
             # redirect to the specific port
             proxy_pass http://127.0.0.1:$1;
         }

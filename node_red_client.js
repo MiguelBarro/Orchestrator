@@ -42,6 +42,9 @@ app.use(cookieSession(global_settings.cookies));
 app.use((req, res, next) => {
     // The orchestrator authentication process generates the browser side encrypted cookies
     // that keep the user identity
+    console.log(req.session.userId);
+    console.log(process.argv[3]);
+
     if (req.session.userId == process.argv[3])
     {
         // already authenticated go on
@@ -69,16 +72,31 @@ let settings = {
 // Create the associated directory if doesn't exist yet
 fs.mkdirSync(settings.userDir, { recursive: true });
 
-// Initialise the runtime with a server and settings
-RED.init(server,settings);
+server.listen(process.argv[2], function(){
 
-// Serve the editor UI
-app.use(settings.httpAdminRoot,RED.httpAdmin);
+    // Initialise the runtime with a server and settings
+    RED.init(server,settings);
 
-// Serve the http nodes UI
-app.use(settings.httpNodeRoot,RED.httpNode);
+    // Serve the editor UI
+    app.use(settings.httpAdminRoot,RED.httpAdmin);
 
-server.listen(process.argv[2]);
+    // Serve the http nodes UI
+    app.use(settings.httpNodeRoot,RED.httpNode);
 
-// Start the runtime
-RED.start();
+    // Start the runtime
+    RED.start();
+
+    // notify success
+    if (process.send )
+        process.send("ok");
+
+} );
+
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    // notify failure
+    if (process.send )
+        process.send("busy port");
+  }
+  throw e;
+});

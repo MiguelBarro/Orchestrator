@@ -16,8 +16,8 @@
 
 const path = require('path')
 const JSONBackup = require('./json-backup');
-
 const state_dir = path.join(__dirname, "../node_red_data");
+let JB = new JSONBackup(path.join(state_dir, "servers.json"));
 
 /*
  * Server format:
@@ -75,7 +75,7 @@ module.exports.returnNextId = (id) => {
 
 module.exports.findByUserName = (username, done) => {
 
-    let id = JB.find_element((x) => { return x.username == username;});
+    let id = JB.find_element((x) => { return x.userName == username;});
 
     if (done == null)
     { // if not functor is provided return id
@@ -87,4 +87,17 @@ module.exports.findByUserName = (username, done) => {
     }
 
     return done(new Error('Server Not Found'));
+};
+
+module.exports.activeServices = () => {
+    let count = 0;
+    let id = JB.next_id(null);
+
+    while(id != null)
+    {
+        ++count;
+        id = JB.next_id(id);
+    }
+
+    return count;
 };

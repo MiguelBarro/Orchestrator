@@ -20,6 +20,7 @@ let ClientOAuth2 = require('client-oauth2');
 let express = require('express');
 let bodyParser = require('body-parser');
 const request = require('request');
+const handler = require('./utils/server_manager');
 let app = express();
 
 const port = process.env.PORT || 11811;
@@ -39,7 +40,7 @@ app.get('/', function (req, res) {
     if (req.session.userId)
     {
         // already authenticated
-        res.send("The current user is: " + req.session.userId);
+        handler.serverAllocation(req.session.userId, res); 
     }
     else
     {
