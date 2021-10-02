@@ -86,9 +86,11 @@ server.listen(process.argv[2], function(){
     // Start the runtime
     RED.start();
 
-    // notify success
-    if (process.send )
-        process.send("ok");
+    // notify success after some time for red-node startup
+    setTimeout(function(){
+        if (process.send )
+            process.send("ok");
+    }, 1000);
 
 } );
 

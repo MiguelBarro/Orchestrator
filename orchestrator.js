@@ -72,4 +72,11 @@ app.get('/auth/callback', function (req, res) {
     });
 });
 
+// periodical server clean up
+setInterval(
+    handler.serverCleanup,
+    15*60*1000,
+    settings.log_file_path
+    );
+
 app.listen(port);

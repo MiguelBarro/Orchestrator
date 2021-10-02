@@ -47,7 +47,7 @@ module.exports.addServer = (usrnm, port, pid) => {
 
 module.exports.removeServer = (usrnm) => {
 
-    let id = JB.find_element((x) => { return x.username == usrnm;});
+    let id = JB.find_element((x) => { return x.userName == usrnm;});
 
     if (id)
     {
@@ -100,4 +100,8 @@ module.exports.activeServices = () => {
     }
 
     return count;
+};
+
+module.exports.foreach = (func) => {
+    JB.find_element(func);
 };

@@ -16,6 +16,7 @@
 
 const fork = require('child_process').fork; 
 const path = require('path'); 
+const fs = require('fs');
 const servers = require('./servers');
 const pid = require('./pid');
 const max_number = 10; // maximum number of services
@@ -97,6 +98,8 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                         servers.addServer(username, port, child.pid);
                         // redirect to the running instance
                         response.redirect('/node_red_server/' + port);
+                        // disconnect the child to avoid 'exit' notification
+                        child.disconnect();
                     }
                     else if( message == 'busy port' )
                     { 
@@ -108,10 +111,13 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                 });
 
                 child.on('exit', (code) => {
-                    // announce failure
-                    response.writeHead(500);
-                    response.end('Unable to launch a new server: ' + code);
-                    releasePortNumber(port);
+                    if( child.connected )
+                    {
+                        // announce failure
+                        response.writeHead(500);
+                        response.end('Unable to launch a new server: ' + code);
+                        releasePortNumber(port);
+                    }
                 });
             }
             else
@@ -125,5 +131,36 @@ module.exports.serverAllocation = function serverAllocation(username, response)
             response.writeHead(500);
             response.end('Unexpected error: ' + err.message);
         }
+    }
+}
+
+module.exports.serverCleanup = function(log_file_path){
+
+    try
+    {
+        // retrieve the log file
+        let log_data = fs.readFileSync(log_file_path).toString();
+
+        // Traverse the list of servers checking for activity in the log
+        servers.foreach((server) => {
+            // Check is this server is active
+            let regex = new RegExp('/node_red_server/'+ server.listeningPort + '/');
+            if(!regex.test(log_data))
+            {
+                // not in use: remove the server
+                servers.removeServer(server.userName);
+                pid.killProcess(server.pId);    
+                console.log('Server ' + server.userName + ' removed due lack of activity.');
+            }
+            
+            // travese the whole list
+            return false;
+        });
+
+        // clear the log file contents
+        fs.writeFileSync(log_file_path,"");
+    }
+    catch(err) { 
+        console.log('Failure purging the servers...' + err.message);
     }
 }
