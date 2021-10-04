@@ -1,0 +1,22 @@
+{
+  "name": "orchestrator",
+  "version": "1.0.0",
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "MiguelBarro",
+      "url": "https://github.com/MiguelBarro"
+    }
+  ],
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "cookie-session": "^1.4.0",
+    "node-red": "^2.0.3",
+    "client-oauth2": "^4.3.3",
+    "body-parser": "^1.19.0",
+    "request": "^2.88.2"
+  }
+}
