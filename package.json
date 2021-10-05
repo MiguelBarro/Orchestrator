@@ -1,6 +1,10 @@
 {
   "name": "orchestrator",
   "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/MiguelBarro/Orchestrator.git"
+  },
   "license": "MIT",
   "contributors": [
     {
