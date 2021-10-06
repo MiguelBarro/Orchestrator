@@ -42,8 +42,6 @@ app.use(cookieSession(global_settings.cookies));
 app.use((req, res, next) => {
     // The orchestrator authentication process generates the browser side encrypted cookies
     // that keep the user identity
-    console.log(req.session.userId);
-    console.log(process.argv[3]);
 
     if (req.session.userId == process.argv[3])
     {
@@ -84,14 +82,11 @@ server.listen(process.argv[2], function(){
     app.use(settings.httpNodeRoot,RED.httpNode);
 
     // Start the runtime
-    RED.start();
-
-    // notify success after some time for red-node startup
-    setTimeout(function(){
+    RED.start().then(function(){
+        // notify success after some time for red-node startup
         if (process.send )
             process.send("ok");
-    }, 1000);
-
+    });
 } );
 
 server.on('error', (e) => {
