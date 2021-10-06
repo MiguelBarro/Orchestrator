@@ -42,8 +42,6 @@ app.use(cookieSession(global_settings.cookies));
 app.use((req, res, next) => {
     // The orchestrator authentication process generates the browser side encrypted cookies
     // that keep the user identity
-    console.log(req.session.userId);
-    console.log(process.argv[3]);
 
     if (req.session.userId == process.argv[3])
     {
@@ -66,7 +64,21 @@ let settings = {
     httpAdminRoot:"/",
     httpNodeRoot: "/red-nodes",
     userDir: __dirname + "/node_red_data/" + process.argv[3],
-    credentialSecret: global_settings.node_red_secret
+    credentialSecret: global_settings.node_red_secret,
+    // disable potencially dangerous blocks
+    // a) function block cannot import modules
+    functionExternalModules: false,
+    // b) exec, network and file blocks
+    nodesExcludes:['05-tls.js','06-httpproxy.js','10-mqtt.js','21-httpin.js','21-httprequest.js','22-websocket.js',
+        '31-tcpin.js','32-udp.js','10-file.js','23-watch.js','90-exec.js'],
+    // c) diable the palette that allows add modules online
+    editorTheme: {
+       palette: {
+            editable: false
+       },
+    },
+    // Set the domain used in the blocks
+    visualRosDomain: 6,
 };
 
 // Create the associated directory if doesn't exist yet
@@ -84,14 +96,11 @@ server.listen(process.argv[2], function(){
     app.use(settings.httpNodeRoot,RED.httpNode);
 
     // Start the runtime
-    RED.start();
-
-    // notify success after some time for red-node startup
-    setTimeout(function(){
+    RED.start().then(function(){
+        // notify success after some time for red-node startup
         if (process.send )
             process.send("ok");
-    }, 1000);
-
+    });
 } );
 
 server.on('error', (e) => {
