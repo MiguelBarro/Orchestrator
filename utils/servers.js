@@ -22,11 +22,11 @@ let JB = new JSONBackup(path.join(state_dir, "servers.json"));
 /*
  * Server format:
 const servers = [
-  { userName: 'Guybrush', listeningPort: 1880, pId: 4536 },
+  { userName: 'Guybrush', listeningPort: 1880, pId: 4536, domain: 1 },
 ];
 */
 
-module.exports.addServer = (usrnm, port, pid) => {
+module.exports.addServer = (usrnm, port, pid, domain) => {
     // data enough
     if(!usrnm || isNaN(parseInt(port)) || isNaN(parseInt(pid)))
     {
@@ -36,13 +36,14 @@ module.exports.addServer = (usrnm, port, pid) => {
     // avoid duplicities
     if(JB.find_element((x) => { return x.userName == usrnm
                                     || x.listeningPort == port
-                                    || x.pId == pid;}))
+                                    || x.pId == pid
+                                    || x.domain == domain;}))
     {
         throw new Error('There is already a user registered with ' + usrnm + ' name.')
     }
 
     // add the server
-    JB.add_element({ userName: usrnm, listeningPort: port, pId: pid});
+    JB.add_element({ userName: usrnm, listeningPort: port, pId: pid, domain: domain});
 }
 
 module.exports.removeServer = (usrnm) => {
@@ -100,6 +101,16 @@ module.exports.activeServices = () => {
     }
 
     return count;
+};
+
+module.exports.activeDomains = () => {
+    let domains = [];
+
+    JB.find_element(function(e){
+        domains.push(e.domain);
+    });
+
+    return domains;
 };
 
 module.exports.foreach = (func) => {

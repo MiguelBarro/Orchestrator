@@ -27,28 +27,68 @@ function getEphemeralPort() {
     return Math.floor(Math.random() * (max - min) + min);
 }
 
+function getDomain() {
+
+    // get domains in use
+    let domains = servers.activeDomains();
+
+    // get a new one
+    let new_domain = null;
+    while (new_domain == null)
+    {
+        new_domain = Math.floor(Math.random() * 100);
+        if (domains.includes(new_domain))
+            new_domain = null;
+    }
+   
+    return new_domain;
+}
+
 // allocation of new ports
 let pending_ports = [];
+let pending_domains = [];
 
-function reservePortNumber()
+function reserveSlot(container, generator)
 {
-    let port = null;
-    while(port == null) 
+    let p = null;
+    while(p == null) 
     {
         // make up one
-        port = getEphemeralPort();
+        p = generator();
         // check if pending
-        if ( port in pending_ports )
-            port = null;
+        if ( container.includes(p) )
+            p = null;
     }
 
-    pending_ports.push(port); 
-    return port;
+    container.push(p); 
+    return p;
+}
+
+function releaseSlot(container, slot)
+{
+   container = container.filter((p) => {return p != slot;}); 
+}
+
+// Port API
+function reservePortNumber()
+{
+    return reserveSlot(pending_ports, getEphemeralPort);
 }
 
 function releasePortNumber(port)
 {
-   pending_ports = pending_ports.filter((p) => {return p != port;}); 
+    releaseSlot(pending_ports, port);
+}
+
+// Domain API
+function reserveDomain()
+{
+    return reserveSlot(pending_domains, getDomain);
+}
+
+function releaseDomain(d)
+{
+    releaseSlot(pending_domains, d);
 }
 
 // server request management
@@ -82,10 +122,14 @@ module.exports.serverAllocation = function serverAllocation(username, response)
             // Decide if launching a server
             if( servers.activeServices() < max_number )
             {
+                // select a new Domain
+                let domain = reserveDomain();
+                // select new port
+                let port = reservePortNumber();
+
                 let program = path.join(__dirname, '../node_red_client.js');
                 program = path.resolve(program);
-                let port = reservePortNumber();
-                let parameters = [ port , username ];
+                let parameters = [ port , username, domain ];
                 let options = {                                     
                     stdio: [ 'ignore', 'ignore', 'ignore', 'ipc' ]    
                 };                                                   
@@ -95,7 +139,7 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                 child.on('message', message => {
                     if ( message == 'ok' )
                     {
-                        servers.addServer(username, port, child.pid);
+                        servers.addServer(username, port, child.pid, domain);
                         // redirect to the running instance
                         response.redirect('/node_red_server/' + port);
                         // disconnect the child to avoid 'exit' notification
@@ -108,6 +152,7 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                     }
 
                     releasePortNumber(port);
+                    releaseDomain(domain);
                 });
 
                 child.on('exit', (code) => {
@@ -117,6 +162,7 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                         response.writeHead(500);
                         response.end('Unable to launch a new server: ' + code);
                         releasePortNumber(port);
+                        releaseDomain(domain);
                     }
                 });
             }

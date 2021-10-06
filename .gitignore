@@ -1,4 +1,6 @@
 settings
 node_red_data
+node_modules
 certs
 nginx.conf
+package-lock.json
