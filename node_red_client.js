@@ -15,13 +15,15 @@
 /* Validate the arguments:
     - listening port number
     - username associated with this server
+    - DDS domain name
 */
 
 'use strict';
 
-if (process.argv.length != 4) throw "Wrong number of arguments";
+if (!([4, 5].includes(process.argv.length))) throw "Wrong number of arguments";
 if (isNaN(parseInt(process.argv[2]))) throw "The first argument is the listening port number";
 if (typeof process.argv[3] != 'string') throw "The second argument is the username";
+if (process.argv[4] != undefined && isNaN(parseInt(process.argv[4]))) throw "The third argument is the DDS Domain";
 
 let cookieSession = require('cookie-session');
 var fs = require('fs');
@@ -77,8 +79,17 @@ let settings = {
             editable: false
        },
     },
+    logging: {
+         console: {
+             level: "trace"
+         }
+     },
+};
+
+if (process.argv[4])
+{
     // Set the domain used in the blocks
-    visualRosDomain: 6,
+    settings.visualRosDomain = process.argv[4];
 };
 
 // Create the associated directory if doesn't exist yet
