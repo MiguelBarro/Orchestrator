@@ -28,7 +28,10 @@ if( os.platform() == 'win32')
 
     module.exports.killProcess = function killProcess(pid)
     {
-        chp.execSync('(Stop-Process -Id ' + pid + ' -ErrorAction SilentlyContinue)');
+        // it kills all the descendants too
+        chp.execSync('(Stop-Process -Id ' + pid + 
+            ' -ErrorAction SilentlyContinue); Get-Process | select -ExpandProperty Parent | Get-Process | ? Id -like ' +
+            pid + ' | Stop-Process');
     }
 }
 else
@@ -40,6 +43,8 @@ else
 
     module.exports.killProcess = function killProcess(pid)
     {
-        chp.execSync('if [ $(ps h -p ' + pid + ' | wc -l) == 1 ]; then kill -9 ' + pid + '; fi', {shell: '/bin/bash'});
+        // it kills all the descendants too
+        chp.execSync('if [ $(ps h --pid ' + pid + ' --ppid ' + pid + ' | wc -l) >= 1 ]; then kill -9 $(ps h --pid ' + pid + ' --ppid ' + pid + ' -o pid); fi',
+            {shell: '/bin/bash'});
     }
 }
