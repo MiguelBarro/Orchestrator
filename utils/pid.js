@@ -44,7 +44,7 @@ else
     module.exports.killProcess = function killProcess(pid)
     {
         // it kills all the descendants too
-        chp.execSync('if [ $(ps h --pid ' + pid + ' --ppid ' + pid + ' | wc -l) >= 1 ]; then kill -9 $(ps h --pid ' + pid + ' --ppid ' + pid + ' -o pid); fi',
+        chp.execSync('if [ $(ps h --pid ' + pid + ' --ppid ' + pid + ' | wc -l) -ge 1 ]; then kill -9 $(ps h --pid ' + pid + ' --ppid ' + pid + ' -o pid); fi',
             {shell: '/bin/bash'});
     }
 }
