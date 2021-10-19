@@ -144,6 +144,7 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                         response.redirect('/node_red_server/' + port);
                         // disconnect the child to avoid 'exit' notification
                         child.disconnect();
+                        console.log('Server ' + username + ' launched on port ' + port + ' and domain ' + domain);
                     }
                     else if( message == 'busy port' )
                     { 
@@ -163,6 +164,7 @@ module.exports.serverAllocation = function serverAllocation(username, response)
                         response.end('Unable to launch a new server: ' + code);
                         releasePortNumber(port);
                         releaseDomain(domain);
+                        console.log('Server ' + username + ' failed to be launched on port ' + port + ' and domain ' + domain);
                     }
                 });
             }
@@ -170,12 +172,14 @@ module.exports.serverAllocation = function serverAllocation(username, response)
             {
                 response.writeHead(500);
                 response.end('All available servers are busy :(');
+                console.log('All available servers are busy :(');
             }
         }
         else
         {
             response.writeHead(500);
             response.end('Unexpected error: ' + err.message);
+            console.log('Unexpected error: ' + err.message);
         }
     }
 }
